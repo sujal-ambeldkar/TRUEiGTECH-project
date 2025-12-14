@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Plan Details</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h2>Plan Details</h2>
+  <div id="planContainer"></div>
+  <button id="subscribeBtn" style="display:none;">Subscribe</button>
+
+  <script type="module">
+    const token = localStorage.getItem('token');
+    if(!token) window.location = 'login.html';
+
+    // Get planId from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('planId');
+
+    const planContainer = document.getElementById('planContainer');
+    const subscribeBtn = document.getElementById('subscribeBtn');
+
+    // Fetch plan details
+    async function getPlanDetails() {
+      const res = await fetch(`http://localhost:5000/plans/${planId}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      
+      if(res.ok) {
+        planContainer.innerHTML = `
+          <h3>${data.title}</h3>
+          <p>Trainer: ${data.trainer.name}</p>
+          <p>Duration: ${data.duration} days</p>
+          <p>Price: ${data.price}</p>
+          <p>Description: ${data.description}</p>
+        `;
+
+        // Show subscribe button if user is not subscribed
+        if(!data.isSubscribed) {
+          subscribeBtn.style.display = 'block';
+        } else {
+          subscribeBtn.style.display = 'none';
+          planContainer.innerHTML += `<p><strong>Already Subscribed </strong></p>`;
+        }
+      } else {
+        planContainer.innerHTML = `<p>Error loading plan</p>`;
+      }
+    }
+
+    // Subscribe to plan
+    subscribeBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/subscriptions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ planId })
+        });
+        const data = await res.json();
+        if(res.ok) {
+          alert('Subscribed successfully!');
+          subscribeBtn.style.display = 'none';
+          getPlanDetails(); // Refresh to show subscription status
+        } else {
+          alert(data.msg || 'Subscription failed');
+        }
+      } catch(err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+    getPlanDetails();
+  </script>
+</body>
+</html>

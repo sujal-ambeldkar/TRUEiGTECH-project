@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitPlanHub Home</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    header {
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(8px);
+      padding: 15px 30px;
+      position: sticky;
+      top: 0;
+    }
+
+    nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 20px;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      background: #fff;
+      color: #ff416c;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 32px;
+    }
+
+    #plansContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: #fff;
+      color: #333;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .plan-card h3 {
+      color: #ff416c;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="trainer.html" id="trainerLink" style="display:none;">Trainer Dashboard</a>
+    <a href="login.html" id="loginLink">Login</a>
+    <a href="signup.html" id="signupLink">Signup</a>
+    <a href="#" id="logoutLink" style="display:none;">Logout</a>
+  </nav>
+</header>
+
+<main>
+  <h2>Plans Feed</h2>
+  <div id="plansContainer"></div>
+</main>
+
+<script type="module">
+  import { getPlans } from './js/api.js';
+
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  const loginLink = document.getElementById('loginLink');
+  const signupLink = document.getElementById('signupLink');
+  const logoutLink = document.getElementById('logoutLink');
+  const trainerLink = document.getElementById('trainerLink');
+  const container = document.getElementById('plansContainer');
+
+
+  if (!token) {
+    window.location = 'login.html';
+  }
+
+
+  loginLink.style.display = 'none';
+  signupLink.style.display = 'none';
+  logoutLink.style.display = 'inline';
+
+  logoutLink.onclick = () => {
+    localStorage.clear();
+    window.location = 'login.html';
+  };
+
+  if (role === 'trainer') {
+    trainerLink.style.display = 'inline';
+    container.innerHTML = `
+      <p style="text-align:center">
+        You are logged in as a trainer.<br>
+        Go to <b>Trainer Dashboard</b> to create plans.
+      </p>`;
+    return;
+  }
+
+  
+  try {
+    const plans = await getPlans(token);
+
+    if (!plans || plans.length === 0) {
+      container.innerHTML = "<p>No plans available.</p>";
+    } else {
+      plans.forEach(plan => {
+        const div = document.createElement('div');
+        div.className = 'plan-card';
+        div.innerHTML = `
+          <h3>${plan.title}</h3>
+          <p>Trainer: ${plan.trainer?.name || 'Unknown'}</p>
+          <p>Price: ₹${plan.price}</p>
+          <a href="plan.html?planId=${plan._id}">View Details</a>
+        `;
+        container.appendChild(div);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Failed to load plans.</p>";
+  }
+</script>
+
+</body>
+</html>

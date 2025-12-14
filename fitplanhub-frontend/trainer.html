@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trainer Dashboard - FitPlanHub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h2>Trainer Dashboard</h2>
+
+  <button id="logoutBtn">Logout</button>
+
+  <h3>Create New Plan</h3>
+  <form id="createPlanForm">
+    <input type="text" id="title" placeholder="Plan Title" required><br>
+    <textarea id="description" placeholder="Description" required></textarea><br>
+    <input type="number" id="price" placeholder="Price" required><br>
+    <input type="number" id="duration" placeholder="Duration (days)" required><br>
+    <button type="submit">Create Plan</button>
+  </form>
+
+  <h3>Your Plans</h3>
+  <div id="plansContainer"></div>
+
+  <script type="module">
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    // Redirect if not logged in or not trainer
+    if(!token || role !== 'trainer') {
+      window.location = 'login.html';
+    }
+
+    const plansContainer = document.getElementById('plansContainer');
+    const createForm = document.getElementById('createPlanForm');
+
+    // Logout button
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location = 'login.html';
+    });
+
+    // Fetch trainer's plans
+    async function getTrainerPlans() {
+      try {
+        const res = await fetch('http://localhost:5000/trainer/plans', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        plansContainer.innerHTML = '';
+
+        if(!res.ok) {
+          plansContainer.innerHTML = `<p>${data.msg || 'Failed to load plans'}</p>`;
+          return;
+        }
+
+        data.forEach(plan => {
+          const div = document.createElement('div');
+          div.classList.add('plan-card');
+          div.innerHTML = `
+            <h4>${plan.title}</h4>
+            <p>${plan.description}</p>
+            <p>Duration: ${plan.duration} days</p>
+            <p>Price: ${plan.price}</p>
+          `;
+          plansContainer.appendChild(div);
+        });
+
+      } catch(err) {
+        plansContainer.innerHTML = `<p>Error: ${err.message}</p>`;
+      }
+    }
+
+    getTrainerPlans(); // load plans on page load
+
+    // Create new plan
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const newPlan = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        price: document.getElementById('price').value,
+        duration: document.getElementById('duration').value
+      };
+
+      try {
+        const res = await fetch('http://localhost:5000/trainer/plans', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(newPlan)
+        });
+
+        const data = await res.json();
+        if(res.ok) {
+          alert('Plan created successfully!');
+          createForm.reset();
+          getTrainerPlans(); // refresh plan list
+        } else {
+          alert(data.msg || 'Failed to create plan');
+        }
+
+      } catch(err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
