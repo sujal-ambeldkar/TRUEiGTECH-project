@@ -1,12 +1,29 @@
 const Plan = require("../models/plan");
 
+// ✅ GET ALL PLANS (for users)
+exports.getAllPlans = async (req, res) => {
+  try {
+    const plans = await Plan.find().populate("trainer", "name");
+    res.json(plans);
+  } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// ✅ GET TRAINER PLANS
+exports.getTrainerPlans = async (req, res) => {
+  try {
+    const plans = await Plan.find({ trainer: req.user.id });
+    res.json(plans);
+  } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// ✅ CREATE PLAN
 exports.createPlan = async (req, res) => {
   try {
     const { title, description, price, duration } = req.body;
-
-    if (!title || !description || !price || !duration) {
-      return res.status(400).json({ msg: "All fields required" });
-    }
 
     const plan = new Plan({
       title,

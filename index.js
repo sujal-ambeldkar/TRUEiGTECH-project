@@ -14,7 +14,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error("MongoDB connection error:", err));
 
 // Routes
-const planRoutes = require("./src/config/routes/plan.routs");
+const planRoutes = require("./src/config/routes/plan.routes");
 app.use("/plans", planRoutes);
 
 const authRoutes = require("./src/config/routes/auth");
