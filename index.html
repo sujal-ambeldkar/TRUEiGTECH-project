@@ -125,15 +125,20 @@
     window.location = 'login.html';
   };
 
-  if (role === 'trainer') {
-    trainerLink.style.display = 'inline';
-    container.innerHTML = `
-      <p style="text-align:center">
-        You are logged in as a trainer.<br>
-        Go to <b>Trainer Dashboard</b> to create plans.
-      </p>`;
-    return;
-  }
+ if (role === 'trainer') {
+  trainerLink.style.display = 'inline';
+
+  const container = document.getElementById('plansContainer');
+  container.innerHTML = `
+    <p style="text-align:center">
+      You are logged in as a <b>Trainer</b>.<br><br>
+      👉 Go to <b>Trainer Dashboard</b> to create plans.
+    </p>
+  `;
+
+  // ❌ NO return here
+}
+
 
   
   try {

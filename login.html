@@ -103,54 +103,46 @@
   </div>
 
   <script type="module">
-    async function loginUser(data) {
+  const form = document.getElementById('loginForm');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
       const res = await fetch('http://localhost:5000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ email, password })
       });
-      if (!res.ok) throw new Error('Login failed');
-      return await res.json();
-    }
 
-    const form = document.getElementById('loginForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+      const data = await res.json();
 
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const data = await loginUser({ email, password });
-        localStorage.setItem('token', data.token);
-        alert('Login successful!');
-        window.location = 'index.html';
-      } catch (err) {
-        alert(err.message);
+      if (!res.ok) {
+        alert(data.msg || 'Login failed');
+        return;
       }
-    });
-    const res = await fetch('http://localhost:5000/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password })
-});
 
-const data = await res.json();
+      // ✅ SAVE BOTH TOKEN AND ROLE
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.user.role);
 
-if (!res.ok) {
-  alert(data.msg || 'Login failed');
-  return;
-}
+      alert('Login successful');
 
-localStorage.setItem('token', data.token);
-localStorage.setItem('role', data.user.role);
+      // ✅ ROLE BASED REDIRECT
+      if (data.user.role === 'trainer') {
+        window.location.href = 'trainer.html';
+      } else {
+        window.location.href = 'index.html';
+      }
 
-if (data.user.role === 'trainer') {
-  window.location = 'trainer.html';
-} else {
-  window.location = 'index.html';
-}
-
-  </script>
+    } catch (err) {
+      alert('Server error');
+      console.error(err);
+    }
+  });
+</script>
 </body>
 </html>

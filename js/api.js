@@ -1,41 +1,62 @@
-const BASE_URL = "http://localhost:5000";
+// src/frontend/js/api.js
 
-export async function signup(userData) {
-  const res = await fetch(`${BASE_URL}/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData)
-  });
-  return res.json();
-}
-
-export async function login(userData) {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData)
-  });
-  return res.json();
-}
-
+// ✅ Get all plans (for users)
 export async function getPlans(token) {
-  const res = await fetch(`${BASE_URL}/plans/ALL`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.json();
+  try {
+    const res = await fetch('http://localhost:5000/plans/all', {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+    if (!res.ok) throw new Error(`Failed to fetch plans: ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error("getPlans error:", err);
+    throw err;
+  }
 }
 
-export async function getPlanDetails(planId, token) {
-  const res = await fetch(`${BASE_URL}/plans/${planId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.json();
+// ✅ Create new plan (for trainers)
+export async function createPlan(token, planData) {
+  try {
+    const res = await fetch('http://localhost:5000/plans/trainer/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(planData)
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.msg || 'Failed to create plan');
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error("createPlan error:", err);
+    throw err;
+  }
 }
 
-export async function subscribePlan(planId, token) {
-  const res = await fetch(`${BASE_URL}/subscriptions/subscribe/${planId}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.json();
+// ✅ Get trainer's own plans
+export async function getTrainerPlans(token) {
+  try {
+    const res = await fetch('http://localhost:5000/plans/trainer', {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.msg || 'Failed to fetch trainer plans');
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error("getTrainerPlans error:", err);
+    throw err;
+  }
 }
